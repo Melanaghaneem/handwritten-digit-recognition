@@ -35,3 +35,33 @@ model = Sequential([
 
 # Display model structure
 model.summary()
+
+# Compile the model
+model.compile(
+    optimizer="adam",
+    loss="categorical_crossentropy",
+    metrics=["accuracy"]
+)
+
+print("Model compiled successfully.")
+
+
+# Train the model
+history = model.fit(
+    X_train,
+    y_train,
+    epochs=5,
+    batch_size=32,
+    validation_split=0.2
+)
+
+print("Model training completed.")
+
+
+# Evaluate the model
+test_loss, test_accuracy = model.evaluate(
+    X_test,
+    y_test
+)
+
+print("Test Accuracy:", test_accuracy)
