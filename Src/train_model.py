@@ -65,3 +65,5 @@ test_loss, test_accuracy = model.evaluate(
 )
 
 print("Test Accuracy:", test_accuracy)
+
+model.save("model/digit_model.keras")
