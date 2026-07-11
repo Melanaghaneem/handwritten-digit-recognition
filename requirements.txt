@@ -1,0 +1,7 @@
+flask==3.0.3
+werkzeug==3.0.3
+tensorflow==2.16.1
+numpy==1.26.4
+pillow==10.3.0
+
+to run the server : python app.py

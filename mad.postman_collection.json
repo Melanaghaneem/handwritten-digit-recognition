@@ -1,0 +1,41 @@
+{
+	"info": {
+		"_postman_id": "5b3441fa-3a98-4868-8052-fa4139383031",
+		"name": "mad",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Predict Handwritting",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "image",
+							"type": "file",
+							"src": "/C:/Users/ASUS/Downloads/test_digit.jpg"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://127.0.0.1:5000/predict-digit",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "5000",
+					"path": [
+						"predict-digit"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
