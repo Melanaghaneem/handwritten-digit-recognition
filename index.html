@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>توقع الأرقام المكتوبة بخط اليد</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f6f9;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .app-container {
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+        }
+        h2 { color: #2d3748; margin-bottom: 8px; }
+        p { color: #718096; font-size: 14px; margin-bottom: 24px; }
+        .drop-zone {
+            border: 2px dashed #4299e1;
+            padding: 25px;
+            border-radius: 12px;
+            background-color: #ebf8ff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+        }
+        .drop-zone:hover { background-color: #ebf4ff; border-color: #3182ce; }
+        .preview-image {
+            max-width: 100%;
+            max-height: 160px;
+            border-radius: 8px;
+            display: none;
+            margin: 10px auto 0;
+        }
+        input[type="file"] { display: none; }
+        button {
+            background-color: #3182ce;
+            color: white;
+            border: none;
+            padding: 14px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 8px;
+            width: 100%;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        button:hover { background-color: #2b6cb0; }
+        .loading { display: none; color: #718096; margin-top: 15px; font-style: italic; }
+        .result-panel {
+            margin-top: 25px;
+            padding: 15px;
+            border-radius: 10px;
+            background-color: #f0fff4;
+            border: 1px solid #c6f6d5;
+            display: none;
+        }
+        .predicted-digit { font-size: 54px; font-weight: 800; color: #22543d; margin: 5px 0; }
+        .confidence-score { color: #2f855a; font-size: 15px; font-weight: 500; }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <h2>توقع الأرقام المكتوبة بخط اليد</h2>
+    <p>قم برفع صورة لرقم واحد من (0-9) لتحليله عبر نموذج Deep Learning</p>
+    
+    <div class="drop-zone" onclick="document.getElementById('fileInput').click()">
+        <span id="dropZoneText">اضغط هنا واشحن صورة الرقم</span>
+        <input type="file" id="fileInput" accept="image/*" onchange="handleImagePreview()">
+        <img id="imagePreview" class="preview-image" alt="معاينة الرقم">
+    </div>
+
+    <button onclick="sendImageToBackend()">تحليل وتوقع الرقم</button>
+    
+    <div id="loadingIndicator" class="loading">جاري معالجة الصورة واستدعاء الـ API...</div>
+
+    <div id="resultPanel" class="result-panel">
+        <span style="color: #4a5568; font-size: 14px;">الرقم الذي تم التعرف عليه:</span>
+        <div id="digitResult" class="predicted-digit">-</div>
+        <div id="confidenceResult" class="confidence-score">نسبة الثقة: 0%</div>
+    </div>
+</div>
+
+<script>
+    function handleImagePreview() {
+        const fileInput = document.getElementById('fileInput');
+        const preview = document.getElementById('imagePreview');
+        const text = document.getElementById('dropZoneText');
+        
+        const file = fileInput.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+                text.style.display = 'none';
+            }
+            reader.readAsDataURL(file);
+        }
+    }
+
+    async function sendImageToBackend() {
+        const fileInput = document.getElementById('fileInput');
+        const loading = document.getElementById('loadingIndicator');
+        const resultPanel = document.getElementById('resultPanel');
+        const digitResult = document.getElementById('digitResult');
+        const confidenceResult = document.getElementById('confidenceResult');
+        
+        if (fileInput.files.length === 0) {
+            alert('رجاءً اختر أو ارفع صورة رقم أولاً!');
+            return;
+        }
+        
+        loading.style.display = 'block';
+        resultPanel.style.display = 'none';
+        
+        const formData = new FormData();
+        formData.append('image', fileInput.files[0]); // مطابقة تامة لاسم الحقل المتوقع في كود الفلاسك
+        
+        try {
+            // توجيه الطلب إلى نقطة النهاية الصحيحة لزملائك
+            const response = await fetch('/predict-digit', { 
+                method: 'POST',
+                body: formData
+            });
+            
+            const data = await response.json();
+            loading.style.display = 'none';
+            
+            if (response.ok && data.status === 'success') {
+                digitResult.innerText = data.digit;
+                
+                // حساب نسبة الثقة
+                let confidence = data.confidence;
+                if (confidence <= 1) {
+                    confidence = (confidence * 100).toFixed(1);
+                } else {
+                    confidence = confidence.toFixed(1);
+                }
+                
+                confidenceResult.innerText = `نسبة الثقة: ${confidence}%`;
+                resultPanel.style.display = 'block';
+            } else {
+                alert('خطأ من خادم الباك إند: ' + (data.error || 'فشل التحليل'));
+            }
+        } catch (error) {
+            loading.style.display = 'none';
+            alert('فشل الاتصال بالباك إند. تأكد أن سيرفر الفلاسك يعمل.');
+            console.error('Error:', error);
+        }
+    }
+</script>
+</body>
+</html>
