@@ -1,6 +1,6 @@
 
 import os
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 from werkzeug.utils import secure_filename
 from predict import predict_digit
 
@@ -55,7 +55,9 @@ def predict():
             return jsonify({'error': f'Model error: {str(e)}'}), 500
 
     return jsonify({'error': 'Invalid file type. Only PNG, JPG, JPEG are allowed'}), 400
-
+@app.route('/')
+def index():
+    return render_template('index.html')
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
